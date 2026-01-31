@@ -5,11 +5,23 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Security.Principal;
+
 
 namespace Clicker2._0
 {
+
     internal static class Program
     {
+        public static bool IsRunningAsAdmin()
+        {
+            // Получаем текущее удостоверение пользователя
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+
+            // Проверяем, входит ли пользователь в роль администратора
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
         /// <summary>
         /// Главная точка входа для приложения.
         /// </summary>
@@ -19,6 +31,16 @@ namespace Clicker2._0
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            if (!IsRunningAsAdmin())
+            {
+                var exeName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                var startInfo = new System.Diagnostics.ProcessStartInfo(exeName)
+                {
+                    Verb = "runas" 
+                };
+                System.Diagnostics.Process.Start(startInfo);
+                return; 
+            }
             if (File.Exists(@"C:\Users\User\AppData\Local\KLXTEMP\path.txt"))
             {
                 Console.WriteLine("File Found path.txt");
